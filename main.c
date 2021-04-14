@@ -3,18 +3,20 @@
 #include <ctype.h>
 
 // define constants
-#define MIN_WIDTH 20
+#define MIN_WIDTH 5 
 #define MAX_WIDTH 100
-#define MIN_HEIGHT 20
+#define MIN_HEIGHT 5
 #define MAX_HEIGHT 100
+#define WIDTH_DIFFERENCE 95 // MAX_WIDTH-MIN_WIDTH
+#define HEIGTH_DIFFERENCE 95 // MAX_HEIGHT-MIN_HEIGHT
 
-#define DEFAULT_WIDTH 50
-#define DEFAULT_HEIGHT 20
+#define DEFAULT_WIDTH 35
+#define DEFAULT_HEIGHT 15
 
-#define BACKGROUND_CARACTER '#'
-#define PAINTED_CARACTER '+'
+#define BACKGROUND_CARACTER ' '
+#define PAINTED_CARACTER '#'
 
-#define SECONDS_BETWEEN_FRAMES 5
+#define SECONDS_BETWEEN_FRAMES 250 
 
 
 // C function showing how to do time delay
@@ -45,7 +47,7 @@ void get_canvas_size(int *width, int *height) {
             printf("Input a width (%d - %d): ", MIN_WIDTH, MAX_WIDTH);
             scanf("%d", width);
         } while (isdigit(*width) == 1 || *width < MIN_WIDTH || *width > MAX_WIDTH);
-        // get heigth
+        // get height
         do {
             system("clear");
             printf("Input a height (%d - %d): ", MIN_HEIGHT, MAX_HEIGHT);
@@ -64,46 +66,94 @@ void get_canvas_size(int *width, int *height) {
 
 }
 
-void draw(int width, int height, int drawn_pixels_x[], drawn_pixels_y[]) {
+void draw(int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
     // function that draws all the "pixels" given a certain x width and a y height
-    int cols, rows, i = 0, j = 0;
+    int i, j;
 
-    // loop through the columns
-    for (cols = 0; cols < height; cols++) {
-        // loop through the rows
-        for (rows = 0; rows < width; rows++) {
-            if (drawn_pixels_x[i] == row
-            printf("%c", BACKGROUND_CARACTER);
-            i++;
+    for (j = 0; j < height; j++) {
+        // loop through all the columns
+        for (i = 0; i < width; i++) {
+            // loop through all the rows
+            // check if the current pixels is inside the parameters
+            printf("%c", pixels[i][j]);
         }
         printf("\n");
-        j++;
     }
 }
 
-void rect(int x, int y, int a, int b, int *x_values, int *y_values) {
-    int i, j, iterator_i = 0, iterator_j = 0;
-    for (i = 0; i <= x; i++) {
-        *x_values[iterator_i] = x+i;
-        iterator_i++;
-    }
-    for (j = 0; j <= y; j++) {
-        *y_values[iterator_j] = y+j;
-        iterator_j++;
+void rect(int x, int y, int a, int b, char paint, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+    // (x,y) is the left top point and (x+a, y+b) is the bottom right point
+    int i, j;
+    
+    for (j = 0; j < HEIGTH_DIFFERENCE; j++) {
+        // loop through all the columns
+        for (i = 0; i < WIDTH_DIFFERENCE; i++) {
+            // loop through all the rows
+            // check if the current pixels is inside the parameters
+            if (j >= y && j <= (y+b) && i == x) {
+                // left line
+                pixels[i][j] = paint;
+            } else if (j >= y && j <= (y+b) && i == (x+a)) {
+                // right line
+                pixels[i][j] = paint;
+            } else if (i > x && i < (x+a) && j == (y)) {
+                // top line
+                pixels[i][j] = paint;
+            } else if (i > x && i < (x+a) && j == (y+b)) {
+                // bottom line
+                pixels[i][j] = paint;
+            }
+        }
     }
 }
 
-void create_canvas(int width, int height, int pixels_x[], int pixels_y[]) {
+void circle(int x, int y, int r, char paint, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+    // (x,y) is the center point and r is the radius
+    int i, j;
+    
+    for (j = 0; j < HEIGTH_DIFFERENCE; j++) {
+        // loop through all the columns
+        for (i = 0; i < WIDTH_DIFFERENCE; i++) {
+            // loop through all the rows
+            // check if the current pixels is inside the parameters
+            if ( i >= (x-r/2) && i <= (x+r/2) && j <= (y-r/2) && j >= (y+r/2) ) {
+                pixels[i][j] = paint;
+            }
+        }
+    }
+}
+
+void create_canvas(int width, int height, char paint, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
     // initialize the pixels arrays with the BACKGROUND_CARACTER
-    int i = 0, j = 0;
-    for 
+    int i, j;
+    for (j = 0; j < HEIGTH_DIFFERENCE; j++) {
+        // loop through all the columns
+        for (i = 0; i < WIDTH_DIFFERENCE; i++) {
+            // loop through all the rows
+            pixels[i][j] = paint;
+        }
+    }
+}
+
+void point(int x, int y, char paint, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+    // create a point in (x,y)
+    int i, j;
+    for (j = 0; j < HEIGTH_DIFFERENCE; j++) {
+        // loop through all the columns
+        for (i = 0; i < WIDTH_DIFFERENCE; i++) {
+            // loop through all the rows
+            if (i == x && j == y) {
+                pixels[i][j] = paint;
+            }
+        }
+    }
 }
 
 int main(void) {
 
     // define variables
     int width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT;
-    int drawn_pixels_x[MAX_WIDTH-MIN_WIDTH], drawn_pixels_y[MAX_HEIGHT-MIN_HEIGHT];
+    int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE];
     char selection;
 
     // change default canvas size if the user wants it
@@ -111,17 +161,32 @@ int main(void) {
         system("clear");
         printf("Default canvas size is %dx%d\n", width, height);
         printf("Would you like to change it? [Y/N] ");
-        scanf(" %c", selection);
+        scanf(" %c", &selection);
     } while (isdigit(selection) == 1 && selection != 'Y' && selection != 'y' && selection != 'N' && selection != 'n');
     if (selection == 'Y' || selection == 'y') {
         get_canvas_size(&width, &height);
     }
 
-    // draw background
-    while (1) {
-        system("clear");
+    // creates the pixels array
+    create_canvas(width, height, BACKGROUND_CARACTER, pixels);
+
+    // fill the pixels with a centered square that covers the borders
+    /*rect(0, 0, width-1, height-1, PAINTED_CARACTER, pixels);*/
+    /*rect(width/2, height/2, width/2+4, height/2+4, PAINTED_CARACTER, pixels);*/
+
+    // draw 
+    int off_x = 0, off_y = 0, current_frame = 0;
+    while (current_frame < 80) {
+        printf("FRAME: %d\n", current_frame++);
         delay(SECONDS_BETWEEN_FRAMES);
-        draw(width, height, drawn_pixels_x, drawn_pixels_y);
+        system("clear");
+        /*rect(off_x++, off_y++, width-off_x++, height-off_y++, PAINTED_CARACTER, pixels);*/
+        rect(0, 0, width-1, height-1, PAINTED_CARACTER, pixels);
+
+        /*circle(width/2, height/2, 6, PAINTED_CARACTER, pixels);*/
+        /*point(width/2, height/2, PAINTED_CARACTER, pixels);*/
+        point(off_x++, height/2, PAINTED_CARACTER, pixels);
+        draw(width, height, pixels);
     }
 
     return 0;
