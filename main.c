@@ -8,19 +8,20 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <time.h>
+#include <math.h>
 
 // define constants
 #define VERSION 1
 
 #define MIN_WIDTH 5 
-#define MAX_WIDTH 100
+#define MAX_WIDTH 300
 #define MIN_HEIGHT 5
-#define MAX_HEIGHT 100
-#define WIDTH_DIFFERENCE 95 // MAX_WIDTH-MIN_WIDTH
-#define HEIGTH_DIFFERENCE 95 // MAX_HEIGHT-MIN_HEIGHT
+#define MAX_HEIGHT 300
+#define WIDTH_DIFFERENCE 295 // MAX_WIDTH-MIN_WIDTH
+#define HEIGTH_DIFFERENCE 295 // MAX_HEIGHT-MIN_HEIGHT
 
 #define DEFAULT_WIDTH 50
-#define DEFAULT_HEIGHT 20
+#define DEFAULT_HEIGHT 16
 
 #define BACKGROUND_CARACTER ' '
 #define PAINTED_CARACTER '#'
@@ -112,16 +113,21 @@ void rect(int x, int y, int a, int b, char paint, int pixels[WIDTH_DIFFERENCE][H
     }
 }
 
-void circle(int x, int y, int r, char paint, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+void circle(int x, int y, int r, int thickness, char paint, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
     // (x,y) is the center point and r is the radius
     int i, j;
+    int Rin = r - thickness;
+    int Rout = r + thickness;
+    int Rin2 = pow(Rin, 2);
+    int Rout2 = pow(Rout, 2);
     
     for (j = 0; j < HEIGTH_DIFFERENCE; j++) {
         // loop through all the columns
         for (i = 0; i < WIDTH_DIFFERENCE; i++) {
             // loop through all the rows
             // check if the current pixels is inside the parameters
-            if ( i >= (x-r/2) && i <= (x+r/2) && j <= (y-r/2) && j >= (y+r/2) ) {
+            int val = pow(i-x, 2) + pow(j-y, 2);
+            if ( i >= (x-r) && i <= (x+r) && val >= Rin2 && val <= Rout2) {
                 pixels[i][j] = paint;
             }
         }
@@ -131,9 +137,9 @@ void circle(int x, int y, int r, char paint, int pixels[WIDTH_DIFFERENCE][HEIGTH
 void create_canvas(int width, int height, char paint, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
     // initialize the pixels arrays with the BACKGROUND_CARACTER
     int i, j;
-    for (j = 0; j < HEIGTH_DIFFERENCE; j++) {
+    for (j = 0; j < height; j++) {
         // loop through all the columns
-        for (i = 0; i < WIDTH_DIFFERENCE; i++) {
+        for (i = 0; i < width; i++) {
             // loop through all the rows
             pixels[i][j] = paint;
         }
@@ -173,7 +179,7 @@ int main(void) {
     }
 
     // creates the pixels array
-    create_canvas(width, height, BACKGROUND_CARACTER, pixels);
+    create_canvas(WIDTH_DIFFERENCE, HEIGTH_DIFFERENCE, BACKGROUND_CARACTER, pixels);
 
     // fill the pixels with a centered square that covers the borders
     /*rect(0, 0, width-1, height-1, PAINTED_CARACTER, pixels);*/
@@ -182,6 +188,8 @@ int main(void) {
     // draw 
     int off_x = 2, off_y = 2, current_frame = 0, direction = -1, rect_off = 0;
     while (current_frame < 400) {
+
+        // screen with system data
         printf("\nFRAME COUNT: %d\n", current_frame++);
         printf("FPS: %d\n", 1000/SECONDS_BETWEEN_FRAMES);
         printf("RESOLUTION: %dx%d\n", width, height);
@@ -189,27 +197,16 @@ int main(void) {
 
         delay(SECONDS_BETWEEN_FRAMES);
         system("clear");
-        /*rect(off_x++, off_y++, width-off_x++, height-off_y++, PAINTED_CARACTER, pixels);*/
-        /*rect(off_x++, off_y++, width-1-off_x, height-1-off_y, PAINTED_CARACTER, pixels);*/
-        /*rect(off_x+1, off_y+1, width+1-off_x, height+1-off_y, BACKGROUND_CARACTER, pixels);*/
 
-        /*circle(width/2, height/2, 6, PAINTED_CARACTER, pixels);*/
-        create_canvas(width, height, BACKGROUND_CARACTER, pixels);
+        create_canvas(width, height, '-', pixels);
         rect(0, 0, width-1, height-1, PAINTED_CARACTER, pixels);
         point(0, 0, 'X', pixels);
         point(width-1, 0, 'X', pixels);
         point(width-1, height-1, 'X', pixels);
         point(0, height-1, 'X', pixels);
 
-
-        /*point(width/2, height/2, PAINTED_CARACTER, pixels);*/
-        /*point(width/2-off_x++, height/2, PAINTED_CARACTER, pixels);*/
-
-        if (off_y == 1 || off_y == height-2) {
-            direction *= -1;
-        }
-        off_y += direction;
-        point(width/2, off_y, 'o', pixels);
+        point(width/2, height/2, 'o', pixels);
+        circle(width/2, height/2, 5, 1, '+', pixels);
         draw(width, height, pixels);
     }
 
