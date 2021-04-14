@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <time.h>
 
 // define constants
 #define MIN_WIDTH 5 
@@ -16,14 +17,9 @@
 #define BACKGROUND_CARACTER ' '
 #define PAINTED_CARACTER '#'
 
-#define SECONDS_BETWEEN_FRAMES 250 
-
-
-// C function showing how to do time delay
-#include <stdio.h>
-// To use time library of C
-#include <time.h>
+#define SECONDS_BETWEEN_FRAMES 33
   
+
 void delay(int number_of_seconds) {
     // Converting time into milli_seconds
     int milli_seconds = 1000 * number_of_seconds;
@@ -175,17 +171,26 @@ int main(void) {
     /*rect(width/2, height/2, width/2+4, height/2+4, PAINTED_CARACTER, pixels);*/
 
     // draw 
-    int off_x = 0, off_y = 0, current_frame = 0;
-    while (current_frame < 80) {
+    int off_x = 2, off_y = 1, current_frame = 0, direction = 1;
+    while (current_frame < 400) {
         printf("FRAME: %d\n", current_frame++);
+        printf("FPS: %d\n", 1000/SECONDS_BETWEEN_FRAMES);
         delay(SECONDS_BETWEEN_FRAMES);
         system("clear");
         /*rect(off_x++, off_y++, width-off_x++, height-off_y++, PAINTED_CARACTER, pixels);*/
-        rect(0, 0, width-1, height-1, PAINTED_CARACTER, pixels);
+        /*rect(off_x++, off_y++, width-1-off_x, height-1-off_y, PAINTED_CARACTER, pixels);*/
+        /*rect(off_x+1, off_y+1, width+1-off_x, height+1-off_y, BACKGROUND_CARACTER, pixels);*/
 
         /*circle(width/2, height/2, 6, PAINTED_CARACTER, pixels);*/
+        create_canvas(width, height, BACKGROUND_CARACTER, pixels);
+        rect(0, 0, width-1, height-1, PAINTED_CARACTER, pixels);
         /*point(width/2, height/2, PAINTED_CARACTER, pixels);*/
-        point(off_x++, height/2, PAINTED_CARACTER, pixels);
+        /*point(width/2-off_x++, height/2, PAINTED_CARACTER, pixels);*/
+        if (off_x == 1 || (off_x+2) == width) {
+            direction *= -1;
+        }
+        off_x += direction;
+        point(off_x, height/2, PAINTED_CARACTER, pixels);
         draw(width, height, pixels);
     }
 
