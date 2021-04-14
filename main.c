@@ -1,9 +1,17 @@
+// MADE BY TOMAS VIDAL
+// SIMPLE GRAPHIC ENGINE
+// THE PURPOSE IT IS TO PROVIDE THE USER WITH BASIC 
+// GRAPHICS UTILITY, SO THE USER CAN DESIGN SOFITICATED ANIMATIONS
+// AN EXAMPLE: A SIMPLE PENDULUM
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <time.h>
 
 // define constants
+#define VERSION 1
+
 #define MIN_WIDTH 5 
 #define MAX_WIDTH 100
 #define MIN_HEIGHT 5
@@ -11,13 +19,14 @@
 #define WIDTH_DIFFERENCE 95 // MAX_WIDTH-MIN_WIDTH
 #define HEIGTH_DIFFERENCE 95 // MAX_HEIGHT-MIN_HEIGHT
 
-#define DEFAULT_WIDTH 35
-#define DEFAULT_HEIGHT 15
+#define DEFAULT_WIDTH 50
+#define DEFAULT_HEIGHT 20
 
 #define BACKGROUND_CARACTER ' '
 #define PAINTED_CARACTER '#'
 
-#define SECONDS_BETWEEN_FRAMES 33
+#define SECONDS_BETWEEN_FRAMES 33 // FOR 30 FPS
+// #define SECONDS_BETWEEN_FRAMES 200 // FOR 5 FPS
   
 
 void delay(int number_of_seconds) {
@@ -171,10 +180,13 @@ int main(void) {
     /*rect(width/2, height/2, width/2+4, height/2+4, PAINTED_CARACTER, pixels);*/
 
     // draw 
-    int off_x = 2, off_y = 1, current_frame = 0, direction = 1;
+    int off_x = 2, off_y = 2, current_frame = 0, direction = -1, rect_off = 0;
     while (current_frame < 400) {
-        printf("FRAME: %d\n", current_frame++);
+        printf("\nFRAME COUNT: %d\n", current_frame++);
         printf("FPS: %d\n", 1000/SECONDS_BETWEEN_FRAMES);
+        printf("RESOLUTION: %dx%d\n", width, height);
+        printf("VERSION: %d\n", VERSION);
+
         delay(SECONDS_BETWEEN_FRAMES);
         system("clear");
         /*rect(off_x++, off_y++, width-off_x++, height-off_y++, PAINTED_CARACTER, pixels);*/
@@ -184,13 +196,20 @@ int main(void) {
         /*circle(width/2, height/2, 6, PAINTED_CARACTER, pixels);*/
         create_canvas(width, height, BACKGROUND_CARACTER, pixels);
         rect(0, 0, width-1, height-1, PAINTED_CARACTER, pixels);
+        point(0, 0, 'X', pixels);
+        point(width-1, 0, 'X', pixels);
+        point(width-1, height-1, 'X', pixels);
+        point(0, height-1, 'X', pixels);
+
+
         /*point(width/2, height/2, PAINTED_CARACTER, pixels);*/
         /*point(width/2-off_x++, height/2, PAINTED_CARACTER, pixels);*/
-        if (off_x == 1 || (off_x+2) == width) {
+
+        if (off_y == 1 || off_y == height-2) {
             direction *= -1;
         }
-        off_x += direction;
-        point(off_x, height/2, PAINTED_CARACTER, pixels);
+        off_y += direction;
+        point(width/2, off_y, 'o', pixels);
         draw(width, height, pixels);
     }
 
