@@ -9,6 +9,8 @@
 #include <ctype.h>
 #include <time.h>
 #include <math.h>
+#include <ncurses.h>
+#include <unistd.h>
 
 // define constants
 #define VERSION 1
@@ -27,7 +29,7 @@
 #define PAINTED_CARACTER '#'
 
 #define SECONDS_BETWEEN_FRAMES 33 // FOR 30 FPS
-// #define SECONDS_BETWEEN_FRAMES 200 // FOR 5 FPS
+//#define SECONDS_BETWEEN_FRAMES 200 // FOR 5 FPS
   
 
 void delay(int number_of_seconds) {
@@ -87,13 +89,13 @@ void draw(int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]
     }
 }
 
-void rect(int x, int y, int a, int b, char paint, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+void rect(int x, int y, int a, int b, char paint, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
     // (x,y) is the left top point and (x+a, y+b) is the bottom right point
     int i, j;
     
-    for (j = 0; j < HEIGTH_DIFFERENCE; j++) {
+    for (j = 0; j < height; j++) {
         // loop through all the columns
-        for (i = 0; i < WIDTH_DIFFERENCE; i++) {
+        for (i = 0; i < width; i++) {
             // loop through all the rows
             // check if the current pixels is inside the parameters
             if (j >= y && j <= (y+b) && i == x) {
@@ -113,7 +115,7 @@ void rect(int x, int y, int a, int b, char paint, int pixels[WIDTH_DIFFERENCE][H
     }
 }
 
-void circle(int x, int y, int r, int thickness, char paint, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+void circle(int x, int y, int r, int thickness, char paint, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
     // (x,y) is the center point and r is the radius
     int i, j;
     int Rin = r - thickness;
@@ -121,9 +123,9 @@ void circle(int x, int y, int r, int thickness, char paint, int pixels[WIDTH_DIF
     int Rin2 = pow(Rin, 2);
     int Rout2 = pow(Rout, 2);
     
-    for (j = 0; j < HEIGTH_DIFFERENCE; j++) {
+    for (j = 0; j < height; j++) {
         // loop through all the columns
-        for (i = 0; i < WIDTH_DIFFERENCE; i++) {
+        for (i = 0; i < width; i++) {
             // loop through all the rows
             // check if the current pixels is inside the parameters
             int val = pow(i-x, 2) + pow(j-y, 2);
@@ -146,16 +148,55 @@ void create_canvas(int width, int height, char paint, int pixels[WIDTH_DIFFERENC
     }
 }
 
-void point(int x, int y, char paint, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+void point(int x, int y, char paint, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
     // create a point in (x,y)
     int i, j;
-    for (j = 0; j < HEIGTH_DIFFERENCE; j++) {
+    for (j = 0; j < height; j++) {
         // loop through all the columns
-        for (i = 0; i < WIDTH_DIFFERENCE; i++) {
+        for (i = 0; i < width; i++) {
             // loop through all the rows
             if (i == x && j == y) {
                 pixels[i][j] = paint;
             }
+        }
+    }
+}
+
+
+void line(int x, int y, int a, int b, int thickness, char paint, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+    // creates a line from point (x,y) to (a,b) with a thickness of thickness
+    int i,j;
+    for (j = 0; j < height; j++) {
+        for (i = 0; i < width; i++) {
+            if (i >= x && i <= a && j == y) {
+
+            }
+        }
+    }
+}
+
+void read_keyboard(int output) {
+    // reads 5 characters of stdin and saves it in a buffer to return output depending
+    // on user input
+    int i;
+    /*initscr();*/
+    /*cbreak();        */
+    /*delay(SECONDS_BETWEEN_FRAMES);*/
+    sleep(1000);
+    int c = 0;        
+    while (c != 'q') {
+        int c = getc(stdin);
+        switch (c) {
+            case 'q':
+                exit(0);
+            case 'a':
+                output = -1;
+                break;
+            case 'd':
+                output = 1;
+                break;
+            default:
+                break;
         }
     }
 }
@@ -169,7 +210,7 @@ int main(void) {
 
     // change default canvas size if the user wants it
     do {
-        system("clear");
+        /*system("clear");*/
         printf("Default canvas size is %dx%d\n", width, height);
         printf("Would you like to change it? [Y/N] ");
         scanf(" %c", &selection);
@@ -186,7 +227,7 @@ int main(void) {
     /*rect(width/2, height/2, width/2+4, height/2+4, PAINTED_CARACTER, pixels);*/
 
     // draw 
-    int off_x = 2, off_y = 2, current_frame = 0, direction = -1, rect_off = 0;
+    int off_x = 2, off_y = 2, current_frame = 0, direction = -1, rect_off = 2;
     while (current_frame < 400) {
 
         // screen with system data
@@ -198,16 +239,30 @@ int main(void) {
         delay(SECONDS_BETWEEN_FRAMES);
         system("clear");
 
-        create_canvas(width, height, '-', pixels);
-        rect(0, 0, width-1, height-1, PAINTED_CARACTER, pixels);
-        point(0, 0, 'X', pixels);
-        point(width-1, 0, 'X', pixels);
-        point(width-1, height-1, 'X', pixels);
-        point(0, height-1, 'X', pixels);
+        create_canvas(width, height, BACKGROUND_CARACTER, pixels);
+        rect(0, 0, width-1, height-1, PAINTED_CARACTER, width, height, pixels);
+        point(0, 0, 'X', width, height, pixels);
+        point(width-1, 0, 'X', width, height, pixels);
+        point(width-1, height-1, 'X', width, height, pixels);
+        point(0, height-1, 'X', width, height, pixels);
 
-        point(width/2, height/2, 'o', pixels);
-        circle(width/2, height/2, 5, 1, '+', pixels);
+        rect(rect_off+1, rect_off+1, width-3-2*rect_off, height-3-2*rect_off, 'o', width, height, pixels);
+        rect(rect_off+2, rect_off+2, width-5-2*rect_off, height-5-2*rect_off, 'o', width, height, pixels);
+        rect_off++; 
+
+        if (rect_off == (height/2-1)) {
+            rect_off = 0;
+        }
+
+        /*point(rect_off, height/2, 'o', width, height, pixels);*/
+        /*circle(width/2, height/2, 5, 1, '+', width, height, pixels);*/
         draw(width, height, pixels);
+        /*if (rect_off <= 2 || rect_off >= (width-2)) {*/
+            /*direction *= -1;*/
+        /*}*/
+        /*rect_off += direction;*/
+
+        /*read_keyboard(direction);*/
     }
 
     return 0;
