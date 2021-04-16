@@ -15,6 +15,7 @@
 
 // define constants
 #define VERSION 1
+#define PI 3.14
 
 #define MIN_WIDTH 5 
 #define MAX_WIDTH 300
@@ -31,7 +32,7 @@
 
 #define GRAVITY 0.1
 #define PENDULUM_MASS 5000
-#define STARTING_ANGLE 15
+#define STARTING_ANGLE 1
 
 #define SECONDS_BETWEEN_FRAMES 33 // FOR 30 FPS
 //#define SECONDS_BETWEEN_FRAMES 200 // FOR 5 FPS
@@ -258,11 +259,12 @@ void line(int a_, int b_, int c_, int d_, int thickness, char paint, int width, 
 
 void pendulum(int x, int y, int L, int ball_radius, int t, float starting_angle, char paint, float gravity, float mass, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
     // creates a pendulum given a certain starting point (x,y) and a length L
+    float deg_to_radiants = PI/180;
     float angular_frequency = sqrt((gravity/mass));
-    float theta = starting_angle*sin(angular_frequency*t);
+    /*float theta = starting_angle*sin(angular_frequency*t);*/
 
-    int dx = x + cos(theta)*L;
-    int dy = y + sin(theta)*L;
+    int dx = x + sin(starting_angle - angular_frequency*deg_to_radiants*t)*L;
+    int dy = y + cos(starting_angle - angular_frequency*deg_to_radiants*t)*L;
 
     line(x, y, dx, dy-ball_radius, 0, paint, width, height, pixels);
     point(x, y, 'o', width, height, pixels);
@@ -313,7 +315,6 @@ void display_clock(int x, int y, int max_radius, int width, int height, int pixe
     int r = max_radius - 1;
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
-    float PI = 3.14;
     float PI4 = PI/4;
     float PI12 = PI/6;
     float PI60 = PI/30;
@@ -391,7 +392,9 @@ int main(void) {
 
         create_canvas(width, height, BACKGROUND_CARACTER, pixels);
         display_canvas_border('O', '-', '|', width, height, pixels);
-        /*rect(0, 0, width-1, height-1, PAINTED_CARACTER, width, height, pixels);*/
+
+        /*rect(width/2, 2, width-2, height-2, PAINTED_CARACTER, width, height, pixels);*/
+
         /*point(0, 0, 'X', width, height, pixels);*/
         /*point(width-1, 0, 'X', width, height, pixels);*/
         /*point(width-1, height-1, 'X', width, height, pixels);*/
@@ -403,11 +406,11 @@ int main(void) {
         /*point(10, 2, 'A', width, height, pixels);*/
         /*point(10, 5, 'A', width, height, pixels);*/
 
-        /*pendulum(2*width/3, 1, height/2, 1, t, STARTING_ANGLE, PAINTED_CARACTER, GRAVITY, PENDULUM_MASS, width, height, pixels);*/
+        pendulum(width/3-3, 1, height/2+3, 3, t, STARTING_ANGLE, PAINTED_CARACTER, GRAVITY, PENDULUM_MASS, width, height, pixels);
 
         /*pendulum(width/3, 1, height/2, 1, t+125, STARTING_ANGLE, PAINTED_CARACTER, GRAVITY, PENDULUM_MASS, width, height, pixels);*/
 
-        display_clock(width/2, height/2, height/3, width, height, pixels);
+        display_clock(2*width/3, height/2, height/3, width, height, pixels);
 
         draw(width, height, pixels);
     
