@@ -11,6 +11,7 @@
 #include <math.h>
 #include <ncurses.h>
 #include <unistd.h>
+#include <time.h>
 
 // define constants
 #define VERSION 1
@@ -28,7 +29,7 @@
 #define BACKGROUND_CARACTER ' '
 #define PAINTED_CARACTER '#'
 
-#define GRAVITY -0.1
+#define GRAVITY 0.1
 #define PENDULUM_MASS 5000
 #define STARTING_ANGLE 15
 
@@ -196,20 +197,44 @@ void line(int a_, int b_, int c_, int d_, int thickness, char paint, int width, 
             gamma = (float) b - (float) m*a;
             /*system("clear");*/
             /*printf("\"IN LINE:\" %d-%d / %d-%d = %lf, gamma=%lf\n", d,b,c,a,m, gamma);*/
-            for (y = 0; y < height; y++) {
-                for (x = 0; x < width; x++) {
-                    int rect_y = abs( (float) m*x + gamma); // actual value of the rect
-                    /*printf("rect_y: %d\n", rect_y);*/
-                    if (x >= a && x <= c && y == rect_y) { // the x is between a and b
-                        pixels[x][y] = paint;
+            if (m > 0) { // diagonal '\\'
+                for (y = 0; y < height; y++) {
+                    for (x = 0; x < width; x++) {
+                        int rect_y = abs( (float) m*x + gamma); // actual value of the rect
+                        if (x >= a && x <= c && y == rect_y) { // the x is between a and b
+                            /*pixels[x][y] = paint;*/
+                            pixels[x][y] = '\\';
+                        }
+                    }
+                }
+            } else { // diagonal '/'
+                for (y = 0; y < height; y++) {
+                    for (x = 0; x < width; x++) {
+                        int rect_y = abs( (float) m*x + gamma); // actual value of the rect
+                        if (x >= a && x <= c && y == rect_y) { // the x is between a and b
+                            /*pixels[x][y] = paint;*/
+                            pixels[x][y] = '/';
+                        }
                     }
                 }
             }
         } else if (a == c && b != d) {
-            for (y = 0; y < height; y++) {
-                for (x = 0; x < width; x++) {
-                    if ( y >= b && y <= d && x == a) {
-                        pixels[x][y] = paint;
+            if (d > b) {
+                for (y = 0; y < height; y++) {
+                    for (x = 0; x < width; x++) {
+                            if ( y >= b && y <= d && x == a) {
+                                /*pixels[x][y] = paint;*/
+                                pixels[x][y] = '|';
+                            }
+                    }
+                }
+            } else if (b > d) {
+                for (y = 0; y < height; y++) {
+                    for (x = 0; x < width; x++) {
+                            if ( y <= b && y >= d && x == a) {
+                                /*pixels[x][y] = paint;*/
+                                pixels[x][y] = '|';
+                            }
                     }
                 }
             }
@@ -217,13 +242,14 @@ void line(int a_, int b_, int c_, int d_, int thickness, char paint, int width, 
             for (y = 0; y < height; y++) {
                 for (x = 0; x < width; x++) {
                     if ( x >= a && x <= c && y == b ) {
-                        pixels[x][y] = paint;
+                        /*pixels[x][y] = paint;*/
+                        pixels[x][y] = '-';
                     }
                 }
             }
         } else {
             printf("ERROR: in line function");
-            exit(1);
+            /*exit(1);*/
         }
 
     }
@@ -270,6 +296,60 @@ void read_keyboard(int output) {
     }
 }
 
+void display_canvas_border(char corners_paint, char horizontal_paint, char vertical_paint, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+    // shows the border of the canvas with custom characters
+    line(0, 0, width-1, 0, 0, horizontal_paint, width, height, pixels);
+    line(0, height-1, width-1, height-1, 0, horizontal_paint, width, height, pixels);
+    line(0, 1, 0, height-1, 0, vertical_paint, width, height, pixels);
+    line(width-1, 1, width-1, height-1, 0, vertical_paint, width, height, pixels);
+    point(0, 0, corners_paint, width, height, pixels);
+    point(width-1, 0, corners_paint, width, height, pixels);
+    point(0, height-1, corners_paint, width, height, pixels);
+    point(width-1, height-1, corners_paint, width, height, pixels);
+}
+
+void display_clock(int x, int y, int max_radius, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+    // creates a clock with center point in (x,y) and maximum radius of max_radius
+    int r = max_radius - 1;
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    float PI = 3.14;
+    float PI4 = PI/4;
+    float PI12 = PI/6;
+    float PI60 = PI/30;
+    int hours = tm.tm_hour;
+    int minutes = tm.tm_min;
+    int seconds = tm.tm_sec;
+
+    // get the end point of the date arrows
+    int Hx = r*cos( (float) PI12*hours - PI4);
+    int Hy = r*sin( (float) PI12*hours - PI4);
+    int Mx = r*cos( (float) PI60*minutes - PI4);
+    int My = r*sin( (float) PI60*minutes - PI4);
+    int Sx = r*cos( (float) PI60*seconds - PI4);
+    int Sy = r*sin( (float) PI60*seconds - PI4);
+
+    circle(x, y, max_radius, 1, '.', width, height, pixels);
+
+    line(x, y, x+Hx, y+Hy, 0, '+', width, height, pixels);
+    line(x, y, x+Mx, y+My, 0, '+', width, height, pixels);
+    line(x, y, x+Sx, y+Sy, 0, '+', width, height, pixels);
+
+    point(x+Hx, y+Hy, 'H', width, height, pixels);
+    point(x+Mx, y+My, 'M', width, height, pixels);
+    point(x+Sx, y+Sy, 'S', width, height, pixels);
+    point(x, y, 'O', width, height, pixels);
+
+    point(x, y-max_radius, '1', width, height, pixels);
+    point(x+1, y-max_radius, '2', width, height, pixels);
+    point(x-max_radius, y, '9', width, height, pixels);
+    point(x, y+max_radius, '6', width, height, pixels);
+    point(x+max_radius, y, '3', width, height, pixels);
+
+    printf("Current time: %d:%d:%d \n\n", tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+}
+
 int main(void) {
 
     // define variables
@@ -296,7 +376,7 @@ int main(void) {
     /*rect(width/2, height/2, width/2+4, height/2+4, PAINTED_CARACTER, pixels);*/
 
     // draw 
-    int off_x = 2, off_y = 2, current_frame = 0, direction = -1, rect_off = 2, t;
+    int current_frame = 0, t;
     while (current_frame < 10000) {
 
         // screen with system data
@@ -310,21 +390,24 @@ int main(void) {
         system("clear");
 
         create_canvas(width, height, BACKGROUND_CARACTER, pixels);
-        rect(0, 0, width-1, height-1, PAINTED_CARACTER, width, height, pixels);
-        point(0, 0, 'X', width, height, pixels);
-        point(width-1, 0, 'X', width, height, pixels);
-        point(width-1, height-1, 'X', width, height, pixels);
-        point(0, height-1, 'X', width, height, pixels);
+        display_canvas_border('O', '-', '|', width, height, pixels);
+        /*rect(0, 0, width-1, height-1, PAINTED_CARACTER, width, height, pixels);*/
+        /*point(0, 0, 'X', width, height, pixels);*/
+        /*point(width-1, 0, 'X', width, height, pixels);*/
+        /*point(width-1, height-1, 'X', width, height, pixels);*/
+        /*point(0, height-1, 'X', width, height, pixels);*/
 
         /*point(rect_off, height/2, 'o', width, height, pixels);*/
         /*circle(width/2, height/2, 5, 1, '+', width, height, pixels);*/
-        /*line(15, 10, 3, 5, 0, '+', width, height, pixels);*/
-        /*point(15, 10, 'o', width, height, pixels);*/
-        /*point(3, 5, 'o', width, height, pixels);*/
+        /*line(15, 10, 0, 0, 0, '+', width, height, pixels);*/
+        /*point(10, 2, 'A', width, height, pixels);*/
+        /*point(10, 5, 'A', width, height, pixels);*/
 
-        pendulum(2*width/3, 1, height/2, 1, t, STARTING_ANGLE, PAINTED_CARACTER, GRAVITY, PENDULUM_MASS, width, height, pixels);
+        /*pendulum(2*width/3, 1, height/2, 1, t, STARTING_ANGLE, PAINTED_CARACTER, GRAVITY, PENDULUM_MASS, width, height, pixels);*/
 
-        pendulum(width/3, 1, height/2, 1, t+125, STARTING_ANGLE, PAINTED_CARACTER, GRAVITY, PENDULUM_MASS, width, height, pixels);
+        /*pendulum(width/3, 1, height/2, 1, t+125, STARTING_ANGLE, PAINTED_CARACTER, GRAVITY, PENDULUM_MASS, width, height, pixels);*/
+
+        display_clock(width/2, height/2, height/3, width, height, pixels);
 
         draw(width, height, pixels);
     
