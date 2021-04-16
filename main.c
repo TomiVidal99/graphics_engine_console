@@ -22,13 +22,13 @@
 #define WIDTH_DIFFERENCE 295 // MAX_WIDTH-MIN_WIDTH
 #define HEIGTH_DIFFERENCE 295 // MAX_HEIGHT-MIN_HEIGHT
 
-#define DEFAULT_WIDTH 80
-#define DEFAULT_HEIGHT 16
+#define DEFAULT_WIDTH 40
+#define DEFAULT_HEIGHT 12
 
 #define BACKGROUND_CARACTER ' '
 #define PAINTED_CARACTER '#'
 
-#define GRAVITY 0.1
+#define GRAVITY -0.1
 #define PENDULUM_MASS 5000
 #define STARTING_ANGLE 15
 
@@ -167,62 +167,80 @@ void point(int x, int y, char paint, int width, int height, int pixels[WIDTH_DIF
 }
 
 
-void line(int a, int b, int c, int d, int thickness, char paint, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+void line(int a_, int b_, int c_, int d_, int thickness, char paint, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
     // creates a line from point (x,y) to (a,b) with a thickness of thickness
-    int x, y;
+    int x, y, a, b, c, d;
     float m, gamma;
 
-    /*system("clear");*/
-    /*printf("(%d, %d) y (%d, %d) \t pendiente: %d y gamma: %.3lf \n", a,b,c,d,m, gamma);*/
+    if ( 0 <= a_ && a_ <= width && 0 <= c_ && c_ <= width && 0 <= b_ && b_ <= height && 0 <= d_ && d_ <= height ) {
+       
+        // i need to reflect the Y axis
+        b *= -1;
+        d *= -1;
 
-    if (a != c && b != d) {
-        m = (d-b)/(c-a);
-        gamma = b - m*a;
-        /*printf("%d-%d / %d-%d = %.2lf, gamma=%.2lf\n", d,b,c,a,m, gamma);*/
-        for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-                int rect_y = m*x + gamma; // actual value of the rect
-                /*printf("rect_y: %d\n", rect_y);*/
-                if (x >= a && x <= c && y == rect_y) { // the x is between a and b
-                    pixels[x][y] = paint;
+        // i reverse the points to set first the closest one
+        if (a_ < c_) {
+            a = a_;
+            b = b_;
+            c = c_;
+            d = d_;
+        } else {
+            a = c_;
+            b = d_;
+            c = a_;
+            d = b_;
+        }
+
+        if (a != c && b != d) {
+            m = (float) (d-b)/ (float) (c-a);
+            gamma = (float) b - (float) m*a;
+            /*system("clear");*/
+            /*printf("\"IN LINE:\" %d-%d / %d-%d = %lf, gamma=%lf\n", d,b,c,a,m, gamma);*/
+            for (y = 0; y < height; y++) {
+                for (x = 0; x < width; x++) {
+                    int rect_y = abs( (float) m*x + gamma); // actual value of the rect
+                    /*printf("rect_y: %d\n", rect_y);*/
+                    if (x >= a && x <= c && y == rect_y) { // the x is between a and b
+                        pixels[x][y] = paint;
+                    }
                 }
             }
-        }
-    } else if (a == c && b != d) {
-        for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-                if ( y >= b && y <= d && x == a) {
-                    pixels[x][y] = paint;
+        } else if (a == c && b != d) {
+            for (y = 0; y < height; y++) {
+                for (x = 0; x < width; x++) {
+                    if ( y >= b && y <= d && x == a) {
+                        pixels[x][y] = paint;
+                    }
                 }
             }
-        }
-    } else if ( a != c && b == d) {
-        for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-                if ( x >= a && x <= c && y == b ) {
-                    pixels[x][y] = paint;
+        } else if ( a != c && b == d) {
+            for (y = 0; y < height; y++) {
+                for (x = 0; x < width; x++) {
+                    if ( x >= a && x <= c && y == b ) {
+                        pixels[x][y] = paint;
+                    }
                 }
             }
+        } else {
+            printf("ERROR: in line function");
+            exit(1);
         }
-    } else {
-        printf("ERROR");
-        exit(1);
+
     }
 
 }
 
-void pendulum(int x, int y, int L, int t, float starting_angle, char paint, float gravity, float mass, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE], int *dx, int *dy, float *theta, float *angular_frequency) {
+void pendulum(int x, int y, int L, int ball_radius, int t, float starting_angle, char paint, float gravity, float mass, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
     // creates a pendulum given a certain starting point (x,y) and a length L
-    int ball_radius = 3;
-    *angular_frequency = sqrt((gravity/mass));
-    *theta = starting_angle*sin(*angular_frequency*t);
+    float angular_frequency = sqrt((gravity/mass));
+    float theta = starting_angle*sin(angular_frequency*t);
 
-    *dx = x + cos(*theta)*L;
-    *dy = y + sin(*theta)*L;
+    int dx = x + cos(theta)*L;
+    int dy = y + sin(theta)*L;
 
-    line(x, y, *dx, *dy-ball_radius, 0, paint, width, height, pixels);
+    line(x, y, dx, dy-ball_radius, 0, paint, width, height, pixels);
     point(x, y, 'o', width, height, pixels);
-    circle(*dx, *dy, ball_radius, 0, '+', width, height, pixels);
+    circle(dx, dy, ball_radius, 0, '+', width, height, pixels);
 
 }
 
@@ -278,8 +296,7 @@ int main(void) {
     /*rect(width/2, height/2, width/2+4, height/2+4, PAINTED_CARACTER, pixels);*/
 
     // draw 
-    int off_x = 2, off_y = 2, current_frame = 0, direction = -1, rect_off = 2, t, dx, dy;
-    float theta, angular_frequency;
+    int off_x = 2, off_y = 2, current_frame = 0, direction = -1, rect_off = 2, t;
     while (current_frame < 10000) {
 
         // screen with system data
@@ -301,11 +318,13 @@ int main(void) {
 
         /*point(rect_off, height/2, 'o', width, height, pixels);*/
         /*circle(width/2, height/2, 5, 1, '+', width, height, pixels);*/
-        /*line(5, 5, 7, 10, 0, '+', width, height, pixels);*/
-        /*point(5, 5, 'o', width, height, pixels);*/
-        /*point(7, 10, 'o', width, height, pixels);*/
+        /*line(15, 10, 3, 5, 0, '+', width, height, pixels);*/
+        /*point(15, 10, 'o', width, height, pixels);*/
+        /*point(3, 5, 'o', width, height, pixels);*/
 
-        pendulum(width/2, 1, 40, t, STARTING_ANGLE, PAINTED_CARACTER, GRAVITY, PENDULUM_MASS, width, height, pixels, &dx, &dy, &theta, &angular_frequency);
+        pendulum(2*width/3, 1, height/2, 1, t, STARTING_ANGLE, PAINTED_CARACTER, GRAVITY, PENDULUM_MASS, width, height, pixels);
+
+        pendulum(width/3, 1, height/2, 1, t+125, STARTING_ANGLE, PAINTED_CARACTER, GRAVITY, PENDULUM_MASS, width, height, pixels);
 
         draw(width, height, pixels);
     
