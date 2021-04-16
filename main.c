@@ -22,11 +22,15 @@
 #define WIDTH_DIFFERENCE 295 // MAX_WIDTH-MIN_WIDTH
 #define HEIGTH_DIFFERENCE 295 // MAX_HEIGHT-MIN_HEIGHT
 
-#define DEFAULT_WIDTH 50
+#define DEFAULT_WIDTH 80
 #define DEFAULT_HEIGHT 16
 
 #define BACKGROUND_CARACTER ' '
 #define PAINTED_CARACTER '#'
+
+#define GRAVITY 0.1
+#define PENDULUM_MASS 5000
+#define STARTING_ANGLE 15
 
 #define SECONDS_BETWEEN_FRAMES 33 // FOR 30 FPS
 //#define SECONDS_BETWEEN_FRAMES 200 // FOR 5 FPS
@@ -163,16 +167,63 @@ void point(int x, int y, char paint, int width, int height, int pixels[WIDTH_DIF
 }
 
 
-void line(int x, int y, int a, int b, int thickness, char paint, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
+void line(int a, int b, int c, int d, int thickness, char paint, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE]) {
     // creates a line from point (x,y) to (a,b) with a thickness of thickness
-    int i,j;
-    for (j = 0; j < height; j++) {
-        for (i = 0; i < width; i++) {
-            if (i >= x && i <= a && j == y) {
+    int x, y;
+    float m, gamma;
 
+    /*system("clear");*/
+    /*printf("(%d, %d) y (%d, %d) \t pendiente: %d y gamma: %.3lf \n", a,b,c,d,m, gamma);*/
+
+    if (a != c && b != d) {
+        m = (d-b)/(c-a);
+        gamma = b - m*a;
+        /*printf("%d-%d / %d-%d = %.2lf, gamma=%.2lf\n", d,b,c,a,m, gamma);*/
+        for (y = 0; y < height; y++) {
+            for (x = 0; x < width; x++) {
+                int rect_y = m*x + gamma; // actual value of the rect
+                /*printf("rect_y: %d\n", rect_y);*/
+                if (x >= a && x <= c && y == rect_y) { // the x is between a and b
+                    pixels[x][y] = paint;
+                }
             }
         }
+    } else if (a == c && b != d) {
+        for (y = 0; y < height; y++) {
+            for (x = 0; x < width; x++) {
+                if ( y >= b && y <= d && x == a) {
+                    pixels[x][y] = paint;
+                }
+            }
+        }
+    } else if ( a != c && b == d) {
+        for (y = 0; y < height; y++) {
+            for (x = 0; x < width; x++) {
+                if ( x >= a && x <= c && y == b ) {
+                    pixels[x][y] = paint;
+                }
+            }
+        }
+    } else {
+        printf("ERROR");
+        exit(1);
     }
+
+}
+
+void pendulum(int x, int y, int L, int t, float starting_angle, char paint, float gravity, float mass, int width, int height, int pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE], int *dx, int *dy, float *theta, float *angular_frequency) {
+    // creates a pendulum given a certain starting point (x,y) and a length L
+    int ball_radius = 3;
+    *angular_frequency = sqrt((gravity/mass));
+    *theta = starting_angle*sin(*angular_frequency*t);
+
+    *dx = x + cos(*theta)*L;
+    *dy = y + sin(*theta)*L;
+
+    line(x, y, *dx, *dy-ball_radius, 0, paint, width, height, pixels);
+    point(x, y, 'o', width, height, pixels);
+    circle(*dx, *dy, ball_radius, 0, '+', width, height, pixels);
+
 }
 
 void read_keyboard(int output) {
@@ -227,14 +278,16 @@ int main(void) {
     /*rect(width/2, height/2, width/2+4, height/2+4, PAINTED_CARACTER, pixels);*/
 
     // draw 
-    int off_x = 2, off_y = 2, current_frame = 0, direction = -1, rect_off = 2;
-    while (current_frame < 400) {
+    int off_x = 2, off_y = 2, current_frame = 0, direction = -1, rect_off = 2, t, dx, dy;
+    float theta, angular_frequency;
+    while (current_frame < 10000) {
 
         // screen with system data
         printf("\nFRAME COUNT: %d\n", current_frame++);
         printf("FPS: %d\n", 1000/SECONDS_BETWEEN_FRAMES);
         printf("RESOLUTION: %dx%d\n", width, height);
         printf("VERSION: %d\n", VERSION);
+        /*printf("dx: %d, dy: %d, theta: %lf, angular_frequency: %lf \n", dx, dy, theta, angular_frequency);*/
 
         delay(SECONDS_BETWEEN_FRAMES);
         system("clear");
@@ -246,23 +299,17 @@ int main(void) {
         point(width-1, height-1, 'X', width, height, pixels);
         point(0, height-1, 'X', width, height, pixels);
 
-        rect(rect_off+1, rect_off+1, width-3-2*rect_off, height-3-2*rect_off, 'o', width, height, pixels);
-        rect(rect_off+2, rect_off+2, width-5-2*rect_off, height-5-2*rect_off, 'o', width, height, pixels);
-        rect_off++; 
-
-        if (rect_off == (height/2-1)) {
-            rect_off = 0;
-        }
-
         /*point(rect_off, height/2, 'o', width, height, pixels);*/
         /*circle(width/2, height/2, 5, 1, '+', width, height, pixels);*/
-        draw(width, height, pixels);
-        /*if (rect_off <= 2 || rect_off >= (width-2)) {*/
-            /*direction *= -1;*/
-        /*}*/
-        /*rect_off += direction;*/
+        /*line(5, 5, 7, 10, 0, '+', width, height, pixels);*/
+        /*point(5, 5, 'o', width, height, pixels);*/
+        /*point(7, 10, 'o', width, height, pixels);*/
 
-        /*read_keyboard(direction);*/
+        pendulum(width/2, 1, 40, t, STARTING_ANGLE, PAINTED_CARACTER, GRAVITY, PENDULUM_MASS, width, height, pixels, &dx, &dy, &theta, &angular_frequency);
+
+        draw(width, height, pixels);
+    
+        t++;
     }
 
     return 0;
