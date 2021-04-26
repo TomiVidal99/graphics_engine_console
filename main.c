@@ -18,12 +18,12 @@
 #define VERSION 2
 #define PI 3.14
 
-#define MIN_WIDTH 5 
+#define MIN_WIDTH 5
 #define MAX_WIDTH 300
 #define MIN_HEIGHT 5
 #define MAX_HEIGHT 300
-#define WIDTH_DIFFERENCE 295 
-#define HEIGTH_DIFFERENCE 295 
+#define WIDTH_DIFFERENCE 295
+#define HEIGTH_DIFFERENCE 295
 
 #define DEFAULT_WIDTH 148
 #define DEFAULT_HEIGHT 36
@@ -43,8 +43,8 @@
 
 #define MAX_FIB 150
 
-#define clc() system("clear")
-/*#define clc() system("cls")*/
+/*#define clc() system("clear")*/
+#define clc() system("cls")
 
 
 /*DEFINICION DE FUNCIONES*/
@@ -63,7 +63,7 @@ void display_debug_data(int);
 /*DEFINICION DE VARIABLES GLOBALES*/
 int width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT;
 char pixels[WIDTH_DIFFERENCE][HEIGTH_DIFFERENCE];
-  
+
 /*LOOP PRINCIPAL*/
 int main(void) {
     /*defino variables*/
@@ -124,7 +124,7 @@ int main(void) {
         display_clock(width/2, height/2, height/3);
 
         draw();
-    
+
         t++;
     }
 
@@ -144,7 +144,7 @@ void delay(int milliseconds) {
 void get_canvas_size(int *w, int *h) {
     /*seteo los valores del tamaño del arreglo*/
     char selection;
-    
+
     do {
         /*ancho*/
         do {
@@ -187,7 +187,7 @@ void draw() {
 void rect(int x, int y, int a, int b, char paint) {
     /*cuadrado desde esquina superior izquierda (x,y) hasta esquina inferior derecha (x+a, y+b)*/
     int i, j;
-    
+
     for (j = 0; j < height; j++) {
         for (i = 0; i < width; i++) {
             /*compruebo que el "pixel" este entre los parametros correctos*/
@@ -216,7 +216,7 @@ void circle(int x, int y, int r, int thickness, char paint) {
     int Rout = r + thickness;
     int Rin2 = pow(Rin, 2);
     int Rout2 = pow(Rout, 2);
-    
+
     for (j = 0; j < height; j++) {
         for (i = 0; i < width; i++) {
             int val = pow(i-x, 2) + pow(j-y, 2);
@@ -256,7 +256,7 @@ void line(int a_, int b_, int c_, int d_, int thickness, char paint_diag_left_ri
     float m, gamma;
 
     if ( 0 <= a_ && a_ <= width && 0 <= c_ && c_ <= width && 0 <= b_ && b_ <= height && 0 <= d_ && d_ <= height ) {
-       
+
         /*reflejo el eje x*/
         b *= -1;
         d *= -1;
@@ -283,7 +283,7 @@ void line(int a_, int b_, int c_, int d_, int thickness, char paint_diag_left_ri
                 for (y = 0; y < height; y++) {
                     for (x = 0; x < width; x++) {
                         int rect_y = abs( (float) m*x + gamma);
-                        if (x >= a && x <= c && y == rect_y) { 
+                        if (x >= a && x <= c && y == rect_y) {
                             pixels[x][y] = paint_diag_left_right;
                             /*pixels[x][y] = '\\';*/
                         }
@@ -292,8 +292,8 @@ void line(int a_, int b_, int c_, int d_, int thickness, char paint_diag_left_ri
             } else { /*diagonal '/'*/
                 for (y = 0; y < height; y++) {
                     for (x = 0; x < width; x++) {
-                        int rect_y = abs( (float) m*x + gamma); 
-                        if (x >= a && x <= c && y == rect_y) { 
+                        int rect_y = abs( (float) m*x + gamma);
+                        if (x >= a && x <= c && y == rect_y) {
                             pixels[x][y] = paint_diag_right_left;
                             /*pixels[x][y] = '/';*/
                         }
@@ -422,7 +422,7 @@ void fibonacci(int f0, int f1) {
 
     fibonacci(f0, f1);
 
-}       
+}
 
 void display_debug_data(int current_frame) {
     /*muetro en pantalla datos utiles para el programador*/
